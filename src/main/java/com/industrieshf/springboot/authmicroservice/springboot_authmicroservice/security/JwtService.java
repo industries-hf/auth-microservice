@@ -1,8 +1,11 @@
 package com.industrieshf.springboot.authmicroservice.springboot_authmicroservice.security;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -12,7 +15,16 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private String SECRET_KEY = "SPRINGDATASOURCEsdasdasdasdadasdadadadadaURL"; 
+    private final String SECRET_KEY;
+    private final long expiration;
+
+    @Autowired
+    public JwtService(Dotenv dotenv) {
+        this.SECRET_KEY = dotenv.get("SECRET_KEY");
+        String expirationValue = dotenv.get("JWT_EXPIRATION", "36000000"); 
+        this.expiration = Long.parseLong(expirationValue); 
+    }
+
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -24,7 +36,7 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 horas
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
